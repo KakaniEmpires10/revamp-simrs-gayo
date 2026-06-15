@@ -1,0 +1,281 @@
+@import 'tailwindcss';
+
+@import 'tw-animate-css';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-sans:
+        Instrument Sans, ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
+
+    --color-info: var(--info);
+    --color-info-foreground: var(--info-foreground);
+
+    --color-indigo: var(--indigo);
+    --color-indigo-foreground: var(--indigo-foreground);
+
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+
+    --color-sidebar: var(--sidebar-background);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+
+    button:not(:disabled),
+    [role="button"]:not(:disabled)
+    {
+        cursor: pointer;
+    }
+}
+
+@layer utilities {
+    body,
+    html {
+        --font-sans:
+            'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+            'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+            'Noto Color Emoji';
+    }
+
+    .auth-medical-grid {
+        background-image: radial-gradient(
+            circle at 2px 2px,
+            hsl(196 100% 50% / 0.12) 1px,
+            transparent 0
+        );
+        background-size: 32px 32px;
+    }
+
+    .auth-scan-line {
+        animation: auth-scan 8s linear infinite;
+        background: linear-gradient(
+            to bottom,
+            transparent,
+            hsl(196 100% 50% / 0.16),
+            transparent
+        );
+    }
+
+    .scrollbar-dialog {
+        scrollbar-width: thin;
+        scrollbar-color: hsl(var(--muted-foreground) / 0.28) transparent;
+    }
+
+    .scrollbar-dialog::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .scrollbar-dialog::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .scrollbar-dialog::-webkit-scrollbar-thumb {
+        background-color: hsl(var(--muted-foreground) / 0.28);
+        border-radius: 9999px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+    }
+
+    .scrollbar-dialog::-webkit-scrollbar-thumb:hover {
+        background-color: hsl(var(--muted-foreground) / 0.45);
+    }
+
+    .scrollbar-dropdown {
+        scrollbar-width: thin;
+        scrollbar-color: color-mix(in oklab, var(--primary) 45%, transparent) transparent;
+    }
+
+    .scrollbar-dropdown::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .scrollbar-dropdown::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .scrollbar-dropdown::-webkit-scrollbar-thumb {
+        background-color: color-mix(in oklab, var(--primary) 45%, transparent);
+        border-radius: 9999px;
+    }
+
+    .scrollbar-dropdown::-webkit-scrollbar-thumb:hover {
+        background-color: color-mix(in oklab, var(--primary) 60%, transparent);
+    }
+}
+
+@keyframes auth-scan {
+    0% {
+        transform: translateY(-7rem);
+    }
+
+    100% {
+        transform: translateY(calc(100vh + 7rem));
+    }
+}
+
+:root {
+    --background: hsl(210 100% 98.5%);
+    --foreground: hsl(224 50% 12%);
+    --card: hsl(0 0% 100%);
+    --card-foreground: hsl(224 50% 12%);
+    --popover: hsl(0 0% 100%);
+    --popover-foreground: hsl(224 50% 12%);
+    --primary: hsl(228 86% 55%);
+    --primary-foreground: hsl(0 0% 98%);
+    --secondary: hsl(211 96% 93%);
+    --secondary-foreground: hsl(224 56% 24%);
+    --muted: hsl(213 75% 95%);
+    --muted-foreground: hsl(218 32% 39%);
+    --accent: hsl(207 94% 91%);
+    --accent-foreground: hsl(224 72% 28%);
+    --destructive: hsl(0 84.2% 60.2%);
+    --destructive-foreground: hsl(0 0% 98%);
+    --success: hsl(153 68% 34%);
+    --success-foreground: hsl(150 100% 97%);
+    --warning: hsl(38 92% 50%);
+    --warning-foreground: hsl(44 96% 8%);
+    --info: hsl(199 89% 48%);
+    --info-foreground: hsl(210 40% 98%);
+    --indigo: hsl(239 84% 67%);
+    --indigo-foreground: hsl(210 40% 98%);
+    --border: hsl(213 65% 88%);
+    --input: hsl(213 65% 86%);
+    --ring: hsl(211 94% 61%);
+    --chart-1: hsl(228 86% 55%);
+    --chart-2: hsl(209 94% 72%);
+    --chart-3: hsl(218 91% 60%);
+    --chart-4: hsl(188 78% 57%);
+    --chart-5: hsl(246 75% 63%);
+    --radius: 0.5rem;
+    --sidebar-background: hsl(213 90% 96%);
+    --sidebar-foreground: hsl(224 50% 18%);
+    --sidebar-primary: hsl(228 86% 55%);
+    --sidebar-primary-foreground: hsl(0 0% 98%);
+    --sidebar-accent: hsl(209 94% 90%);
+    --sidebar-accent-foreground: hsl(224 72% 28%);
+    --sidebar-border: hsl(213 70% 86%);
+    --sidebar-ring: hsl(211 94% 61%);
+    --sidebar: hsl(213 90% 96%);
+}
+
+.dark {
+    --background: hsl(224 52% 8%);
+    --foreground: hsl(210 100% 96%);
+    --card: hsl(224 45% 10%);
+    --card-foreground: hsl(210 100% 96%);
+    --popover: hsl(224 45% 10%);
+    --popover-foreground: hsl(210 100% 96%);
+    --primary: hsl(209 94% 72%);
+    --primary-foreground: hsl(226 70% 13%);
+    --secondary: hsl(224 38% 18%);
+    --secondary-foreground: hsl(210 100% 96%);
+    --muted: hsl(224 36% 16%);
+    --muted-foreground: hsl(213 38% 72%);
+    --accent: hsl(224 52% 20%);
+    --accent-foreground: hsl(207 94% 86%);
+    --destructive: hsl(0 84% 60%);
+    --destructive-foreground: hsl(0 0% 98%);
+    --success: hsl(153 60% 48%);
+    --success-foreground: hsl(150 100% 97%);
+    --warning: hsl(38 92% 60%);
+    --warning-foreground: hsl(44 96% 8%);
+    --info: hsl(199 89% 58%);
+    --info-foreground: hsl(210 40% 98%);
+    --indigo: hsl(239 84% 77%);
+    --indigo-foreground: hsl(226 70% 13%);
+    --border: hsl(224 36% 20%);
+    --input: hsl(224 36% 20%);
+    --ring: hsl(209 94% 72%);
+    --chart-1: hsl(220 70% 50%);
+    --chart-2: hsl(209 94% 72%);
+    --chart-3: hsl(188 78% 57%);
+    --chart-4: hsl(246 75% 63%);
+    --chart-5: hsl(228 86% 65%);
+    --sidebar-background: hsl(224 50% 10%);
+    --sidebar-foreground: hsl(210 100% 94%);
+    --sidebar-primary: hsl(209 94% 72%);
+    --sidebar-primary-foreground: hsl(226 70% 13%);
+    --sidebar-accent: hsl(224 46% 18%);
+    --sidebar-accent-foreground: hsl(207 94% 86%);
+    --sidebar-border: hsl(224 38% 20%);
+    --sidebar-ring: hsl(209 94% 72%);
+    --sidebar: hsl(224 50% 10%);
+}
+
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+}

@@ -1,0 +1,34 @@
+/*
+ * sonner.css
+ * Global CSS overrides untuk vue-sonner / sonner.
+ * Import file ini SETELAH "vue-sonner/style.css" di app entry point.
+ *
+ * Kenapa butuh file ini:
+ *  - unstyled:true strips default layout, tapi beberapa rule sonner
+ *    di-inject inline atau lewat style sheet khusus.
+ *  - [data-content] perlu flex:1 agar title+description bisa push ke kanan.
+ *  - loading spinner default posisinya absolute (centered), harus di-reset.
+ *  - Animasi default sonner 400ms — dikurangi ke 200ms agar terasa responsif.
+ */
+
+/* Pastikan content area fill sisa lebar */
+[data-sonner-toaster] [data-sonner-toast] [data-content] {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Fix loading spinner posisi (default: absolute center) */
+[data-sonner-toaster] [data-sonner-toast][data-type="loading"] .sonner-loader {
+    position: static;
+    transform: none;
+}
+
+/* Animasi lebih cepat & responsif */
+[data-sonner-toaster] [data-sonner-toast] {
+    --toast-animation-duration: 200ms;
+    transition:
+        transform 200ms ease,
+        opacity   200ms ease,
+        height    200ms ease,
+        box-shadow 200ms ease !important;
+}
