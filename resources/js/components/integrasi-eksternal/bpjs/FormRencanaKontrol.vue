@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
-import { CalendarIcon, Check, ChevronsUpDown, ClipboardList, Save } from '@lucide/vue';
+import { AlertTriangle, CalendarIcon, Check, ChevronsUpDown, ClipboardList, RefreshCw, Save } from '@lucide/vue';
 import { computed, ref, toRef, watch } from 'vue';
 import { parseDate } from '@internationalized/date';
 import {
@@ -121,6 +121,7 @@ const sepDetail = ref<SepDetail | null>(null);
 const specialistError = ref('');
 const doctorError = ref('');
 const detailError = ref('');
+const detailErrorCode = ref('');
 const detailLoading = ref(false);
 
 const initialControlDate = ref('');
@@ -234,6 +235,16 @@ const submitIcon = computed(() => props.mode === 'create' ? ClipboardList : Save
 const canChangeSchedule = computed(() => props.mode === 'create' || scheduleTouched.value);
 
 const issuedDate = computed(() => stringValue(controlDetail.value?.tglTerbit));
+const detailFailure = computed(() => {
+    if (props.mode !== 'update' || detailLoading.value || !detailError.value) {
+        return null;
+    }
+
+    return {
+        code: detailErrorCode.value || 'BPJS_ERROR',
+        message: detailError.value,
+    };
+});
 
 const scheduleNote = computed(() => {
     if (props.mode === 'update' && !scheduleTouched.value) {
@@ -482,6 +493,7 @@ async function loadDoctors(): Promise<void> {
 async function loadSepDetail(): Promise<SepDetail | null> {
     if (!props.referenceNumber) {
         detailError.value = 'Nomor SEP tidak tersedia.';
+        detailErrorCode.value = 'NO_SEP';
 
         return null;
     }
@@ -499,15 +511,17 @@ async function loadSepDetail(): Promise<SepDetail | null> {
         };
 
         if (result.metadata?.code !== '200') {
-            detailError.value = `Gagal mengambil detail SEP dari BPJS: ${result.metadata?.message ?? 'BPJS tidak mengembalikan pesan error.'}`;
+            detailErrorCode.value = String(result.metadata?.code ?? 'BPJS_ERROR');
+            detailError.value = result.metadata?.message ?? 'BPJS tidak mengembalikan pesan error.';
 
             return null;
         }
 
         return result.sep ?? result.response ?? null;
     } catch (error) {
+        detailErrorCode.value = 'CONNECTION_ERROR';
         detailError.value = error instanceof Error
-            ? `Gagal terhubung ke BPJS saat mengambil detail SEP: ${error.message}`
+            ? error.message
             : 'Gagal terhubung ke BPJS saat mengambil detail SEP.';
 
         return null;
@@ -517,6 +531,7 @@ async function loadSepDetail(): Promise<SepDetail | null> {
 async function loadControlPlanDetail(): Promise<ControlPlanDetail | null> {
     if (!props.referenceNumber) {
         detailError.value = 'Nomor SKDP tidak tersedia.';
+        detailErrorCode.value = 'NO_SKDP';
 
         return null;
     }
@@ -534,15 +549,17 @@ async function loadControlPlanDetail(): Promise<ControlPlanDetail | null> {
         };
 
         if (result.metadata?.code !== '200') {
-            detailError.value = `Gagal mengambil detail SKDP dari BPJS: ${result.metadata?.message ?? 'BPJS tidak mengembalikan pesan error.'}`;
+            detailErrorCode.value = String(result.metadata?.code ?? 'BPJS_ERROR');
+            detailError.value = result.metadata?.message ?? 'BPJS tidak mengembalikan pesan error.';
 
             return null;
         }
 
         return result.kontrol ?? result.response ?? null;
     } catch (error) {
+        detailErrorCode.value = 'CONNECTION_ERROR';
         detailError.value = error instanceof Error
-            ? `Gagal terhubung ke BPJS saat mengambil detail SKDP: ${error.message}`
+            ? error.message
             : 'Gagal terhubung ke BPJS saat mengambil detail SKDP.';
 
         return null;
@@ -557,6 +574,7 @@ async function initializeForm(): Promise<void> {
 
     detailLoading.value = true;
     detailError.value = '';
+    detailErrorCode.value = '';
 
     resetDialogState();
     resetReferences();
@@ -741,6 +759,35 @@ watch(
                 <DialogDescription>{{ description }}</DialogDescription>
             </DialogHeader>
 
+            <div v-if="detailFailure" class="grid gap-5">
+                <div class="mx-auto flex size-14 items-center justify-center rounded-full bg-warning/15 text-warning">
+                    <AlertTriangle class="size-7" />
+                </div>
+
+                <div class="space-y-2 text-center">
+                    <h3 class="text-lg font-semibold">
+                        Data SKDP tidak dapat dimuat
+                    </h3>
+                    <p class="text-sm leading-relaxed text-muted-foreground">
+                        {{ detailFailure.message }}
+                    </p>
+                    <Badge variant="soft-warning" size="sm" class="font-mono">
+                        Kode BPJS: {{ detailFailure.code }}
+                    </Badge>
+                </div>
+
+                <DialogFooter class="justify-center sm:justify-center">
+                    <Button type="button" variant="secondary" @click="open = false">
+                        Tutup
+                    </Button>
+                    <Button type="button" variant="outline" @click="initializeForm">
+                        <RefreshCw class="size-4" />
+                        Coba Lagi
+                    </Button>
+                </DialogFooter>
+            </div>
+
+            <template v-else>
             <div
                 class="relative overflow-hidden rounded-lg border border-primary/20 bg-linear-to-br from-primary/8 via-card to-emerald-500/8 p-4">
                 <svg class="pointer-events-none absolute -right-16 -bottom-24 h-52 w-96 rotate-[-14deg] text-primary/10"
@@ -905,20 +952,16 @@ watch(
                                 <CommandInput placeholder="Cari poli tujuan kontrol..." />
 
                                 <CommandList>
-                                    <CommandEmpty>
-                                        {{ specialistEmptyText }}
+                                    <CommandEmpty v-if="specialistOptions.length > 0 && !specialistError">
+                                        Tidak ada poli yang sesuai dengan pencarian.
                                     </CommandEmpty>
 
-                                    <div v-if="specialistOptions.length === 0"
-                                        class="px-3 py-6 text-center text-sm text-muted-foreground">
+                                    <div v-if="specialistOptions.length === 0" class="px-3 py-5 text-center text-sm">
                                         <Spinner v-if="specialistLoading" class="mx-auto mb-2" />
-
-                                        <p class="font-medium text-foreground">
-                                            {{ specialistLoading ? 'Memuat referensi poli' : (specialistError ?
-                                                'Referensi poli gagal dimuat' : 'Poli tidak tersedia') }}
+                                        <p class="font-medium" :class="specialistError ? 'text-destructive' : 'text-foreground'">
+                                            {{ specialistLoading ? 'Memuat referensi poli' : (specialistError ? 'Referensi poli gagal dimuat' : 'Poli tidak tersedia') }}
                                         </p>
-
-                                        <p class="mt-1 text-xs leading-relaxed">
+                                        <p class="mt-1 text-xs leading-relaxed text-muted-foreground">
                                             {{ specialistEmptyText }}
                                         </p>
                                     </div>
@@ -972,19 +1015,16 @@ watch(
                                 <CommandInput placeholder="Cari dokter kontrol..." />
 
                                 <CommandList>
-                                    <CommandEmpty>
-                                        {{ doctorEmptyText }}
+                                    <CommandEmpty v-if="doctorOptions.length > 0 && !doctorError">
+                                        Tidak ada dokter yang sesuai dengan pencarian.
                                     </CommandEmpty>
 
-                                    <div v-if="doctorOptions.length === 0"
-                                        class="px-3 py-6 text-center text-sm text-muted-foreground">
+                                    <div v-if="doctorOptions.length === 0" class="px-3 py-5 text-center text-sm">
                                         <Spinner v-if="doctorLoading" class="mx-auto mb-2" />
-
-                                        <p class="font-medium text-foreground">
+                                        <p class="font-medium" :class="doctorError ? 'text-destructive' : 'text-foreground'">
                                             {{ doctorLoading ? 'Memuat jadwal dokter' : (doctorError ? 'Jadwal dokter gagal dimuat' : 'Jadwal dokter tidak tersedia') }}
                                         </p>
-
-                                        <p class="mt-1 text-xs leading-relaxed">
+                                        <p class="mt-1 text-xs leading-relaxed text-muted-foreground">
                                             {{ doctorEmptyText }}
                                         </p>
                                     </div>
@@ -1038,6 +1078,7 @@ watch(
                     {{ submitLabel }}
                 </Button>
             </DialogFooter>
+            </template>
         </DialogContent>
     </Dialog>
 </template>

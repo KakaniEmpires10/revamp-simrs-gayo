@@ -159,6 +159,9 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('bpjs/vclaim-rencana-kontrol/{noSurat}', [VClaimController::class, 'updateControlPlan'])->name('bpjs.vclaim.control-plans.update');
         Route::delete('bpjs/vclaim-rencana-kontrol/{noSurat}', [VClaimController::class, 'destroyControlPlan'])->name('bpjs.vclaim.control-plans.destroy');
         Route::get('bpjs/vclaim-rencana-rawat-inap', [VClaimController::class, 'inpatientPlans'])->name('bpjs.vclaim.inpatient-plans');
+        Route::get('bpjs/vclaim-rencana-rawat-inap/referensi-poli', [VClaimController::class, 'inpatientPlanSpecialists'])->name('bpjs.vclaim.inpatient-plans.specialists');
+        Route::get('bpjs/vclaim-rencana-rawat-inap/referensi-dokter', [VClaimController::class, 'inpatientPlanDoctors'])->name('bpjs.vclaim.inpatient-plans.doctors');
+        Route::get('bpjs/vclaim-rencana-rawat-inap/{noSurat}/detail', [VClaimController::class, 'inpatientPlanDetail'])->name('bpjs.vclaim.inpatient-plans.detail');
         Route::post('bpjs/vclaim-rencana-rawat-inap/{noRawat}/spri', [VClaimController::class, 'storeRegistrationInpatientPlan'])
             ->where('noRawat', '.*')
             ->name('bpjs.vclaim.inpatient-plans.registration.store');

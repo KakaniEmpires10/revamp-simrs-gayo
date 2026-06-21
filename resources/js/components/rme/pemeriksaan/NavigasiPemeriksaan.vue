@@ -36,7 +36,7 @@ function menuIcon(menu: PemeriksaanMenu) {
 
 <template>
     <nav v-if="orientation === 'vertical'" class="w-full">
-        <div class="grid gap-1 border-l border-border pl-2">
+        <div class="grid gap-1">
             <template v-for="menu in menuList" :key="menu.key">
                 <details v-if="menu.children?.length" class="group" :open="isActive(menu)">
                     <summary

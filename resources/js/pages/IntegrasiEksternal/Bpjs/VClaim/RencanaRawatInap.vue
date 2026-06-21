@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { ArrowLeft, CalendarIcon } from '@lucide/vue';
 import { ref, watch } from 'vue';
 import { index as bpjsIndex } from '@/actions/App/Modules/Bpjs/Http/Controllers/BpjsDashboardController';
 import {
     destroyInpatientPlan,
     inpatientPlans,
-    updateInpatientPlan,
 } from '@/actions/App/Modules/Bpjs/Http/Controllers/VClaimController';
 import DialogEditRencanaRawatInap from '@/components/integrasi-eksternal/bpjs/vclaim/DialogEditRencanaRawatInap.vue';
 import TabelRencanaRawatInap from '@/components/integrasi-eksternal/bpjs/vclaim/TabelRencanaRawatInap.vue';
@@ -57,12 +56,6 @@ const loading = ref(false);
 const selectedRow = ref<InpatientPlanRow | null>(null);
 const editDialogOpen = ref(false);
 const { openDeleteDialog: openGlobalDeleteDialog } = useDeleteDialog();
-
-const editForm = useForm({
-    kode_dokter: '',
-    poli_kontrol: '',
-    tanggal_kontrol: '',
-});
 
 const filterOptions = [
     { label: 'Tanggal Entry', value: '1' },
@@ -131,10 +124,6 @@ function letterNumber(row: InpatientPlanRow | null): string {
 
 function openEditDialog(row: InpatientPlanRow): void {
     selectedRow.value = row;
-    editForm.clearErrors();
-    editForm.kode_dokter = value(row, 'kodeDokter', 'kdDokter', 'kodeDokterKontrol') === '-' ? '' : value(row, 'kodeDokter', 'kdDokter', 'kodeDokterKontrol');
-    editForm.poli_kontrol = value(row, 'kodePoliTujuan', 'kdPoliTujuan', 'kodePoli') === '-' ? '' : value(row, 'kodePoliTujuan', 'kdPoliTujuan', 'kodePoli');
-    editForm.tanggal_kontrol = value(row, 'tglRencanaKontrol', 'tglKontrol') === '-' ? endDate.value : value(row, 'tglRencanaKontrol', 'tglKontrol');
     editDialogOpen.value = true;
 }
 
@@ -166,22 +155,6 @@ function openDeleteDialog(row: InpatientPlanRow): void {
     });
 }
 
-function submitEdit(): void {
-    const noSurat = letterNumber(selectedRow.value);
-
-    if (noSurat === '-') {
-        return;
-    }
-
-    editForm.patch(updateInpatientPlan.url(noSurat), {
-        preserveScroll: true,
-        onSuccess: () => {
-            editDialogOpen.value = false;
-            editForm.reset();
-            selectedRow.value = null;
-        },
-    });
-}
 </script>
 
 <template>
@@ -256,9 +229,7 @@ function submitEdit(): void {
 
         <DialogEditRencanaRawatInap
             v-model:open="editDialogOpen"
-            :form="editForm"
             :selected-row="selectedRow"
-            @submit="submitEdit"
         />
     </div>
 </template>

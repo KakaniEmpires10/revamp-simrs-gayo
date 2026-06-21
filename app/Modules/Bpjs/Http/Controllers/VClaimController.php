@@ -223,6 +223,11 @@ class VClaimController extends Controller
         return response()->json($service->controlPlan($noSurat));
     }
 
+    public function inpatientPlanDetail(VClaimService $service, string $noSurat): JsonResponse
+    {
+        return response()->json($service->controlPlan($noSurat));
+    }
+
     public function controlPlanSpecialists(Request $request, VClaimService $service): JsonResponse
     {
         $data = $request->validate([
@@ -241,6 +246,26 @@ class VClaimController extends Controller
         ]);
 
         return response()->json($service->controlPlanDoctors($data['poli_kontrol'], $data['tanggal_kontrol']));
+    }
+
+    public function inpatientPlanSpecialists(Request $request, VClaimService $service): JsonResponse
+    {
+        $data = $request->validate([
+            'no_kartu' => ['required', 'string', 'max:40'],
+            'tanggal_kontrol' => ['required', 'date_format:Y-m-d'],
+        ]);
+
+        return response()->json($service->controlPlanSpecialists($data['no_kartu'], $data['tanggal_kontrol'], '1'));
+    }
+
+    public function inpatientPlanDoctors(Request $request, VClaimService $service): JsonResponse
+    {
+        $data = $request->validate([
+            'poli_kontrol' => ['required', 'string', 'max:20'],
+            'tanggal_kontrol' => ['required', 'date_format:Y-m-d'],
+        ]);
+
+        return response()->json($service->controlPlanDoctors($data['poli_kontrol'], $data['tanggal_kontrol'], '1'));
     }
 
     public function updateControlPlan(VClaimUpdateRencanaKontrolRequest $request, VClaimService $service, string $noSurat): RedirectResponse
@@ -357,7 +382,7 @@ class VClaimController extends Controller
             );
 
             if ($result['metadata']['code'] === '200') {
-                $this->updateLocalInpatientPlan($noSurat, $request->validated(), $result['spri']);
+                $this->updateLocalInpatientPlan($noSurat, $request->validated(), $result['spri'] ?? []);
             }
 
             return $result;
@@ -556,14 +581,19 @@ class VClaimController extends Controller
      */
     private function updateLocalInpatientPlan(string $letterNumber, array $input, array $spri): void
     {
+        $existingPlan = DB::table('bridging_surat_pri_bpjs')
+            ->where('no_surat', $letterNumber)
+            ->first();
+        $fallbackPoliName = $this->localPoliName($input['poli_kontrol']) ?: (string) ($existingPlan?->nm_poli_bpjs ?? '');
+
         DB::table('bridging_surat_pri_bpjs')
             ->where('no_surat', $letterNumber)
             ->update([
                 'tgl_rencana' => (string) Arr::get($spri, 'tglRencanaKontrol', $input['tanggal_kontrol']),
                 'kd_dokter_bpjs' => $input['kode_dokter'],
-                'nm_dokter_bpjs' => (string) Arr::get($spri, 'namaDokter', ''),
+                'nm_dokter_bpjs' => (string) Arr::get($spri, 'namaDokter', $existingPlan?->nm_dokter_bpjs ?? ''),
                 'kd_poli_bpjs' => $input['poli_kontrol'],
-                'nm_poli_bpjs' => $this->localPoliName($input['poli_kontrol']),
+                'nm_poli_bpjs' => (string) Arr::get($spri, 'namaPoliKontrol', $fallbackPoliName),
             ]);
     }
 

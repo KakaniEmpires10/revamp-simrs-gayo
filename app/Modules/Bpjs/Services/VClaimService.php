@@ -343,7 +343,7 @@ class VClaimService
 
         return [
             ...$result,
-            'kontrol' => $result['response'],
+            'kontrol' => $result['response'] ?? [],
         ];
     }
 

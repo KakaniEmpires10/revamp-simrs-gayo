@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
+import type { Page } from '@inertiajs/core';
 import { useDebounceFn } from '@vueuse/core';
 import { CalendarClock, CalendarIcon, Check, ChevronsUpDown, Save, Search } from '@lucide/vue';
 import { computed, reactive, ref, toRef, watch } from 'vue';
@@ -99,11 +100,11 @@ const selectedSepLabel = computed(() => {
 });
 
 const selectedClinicLabel = computed(() => {
-    return clinicOptions.value.find((clinic) => clinic.value === form.poli_kontrol)?.label || 'Pilih spesialis/subspesialis';
+    return clinicOptions.value.find((clinic) => clinic.value === form.poli_kontrol)?.label || form.nama_poli || 'Pilih spesialis/subspesialis';
 });
 
 const selectedDoctorLabel = computed(() => {
-    return doctorOptions.value.find((doctor) => doctor.value === form.kode_dokter)?.label || 'Pilih dokter DPJP BPJS';
+    return doctorOptions.value.find((doctor) => doctor.value === form.kode_dokter)?.label || form.nama_dokter || 'Pilih dokter DPJP BPJS';
 });
 
 const bisaMemuatPoli = computed(() => Boolean(props.patient?.no_peserta && form.tanggal_kontrol));
@@ -223,7 +224,7 @@ async function loadClinics(): Promise<void> {
         }
 
         const payload = await response.json() as { data?: RegistrationOption[] };
-        clinicOptions.value = payload.data ?? [];
+        clinicOptions.value = mergeOption(payload.data ?? [], form.poli_kontrol, form.nama_poli);
     } catch {
         clinicError.value = 'Gagal memuat spesialis/subspesialis dari VClaim.';
         clinicOptions.value = [];
@@ -250,7 +251,7 @@ async function loadDoctors(): Promise<void> {
         }
 
         const payload = await response.json() as { data?: RegistrationOption[] };
-        doctorOptions.value = payload.data ?? [];
+        doctorOptions.value = mergeOption(payload.data ?? [], form.kode_dokter, form.nama_dokter);
     } catch {
         doctorError.value = 'Gagal memuat jadwal dokter BPJS dari VClaim.';
         doctorOptions.value = [];
@@ -310,6 +311,21 @@ function selectDoctor(doctor: RegistrationOption): void {
     doctorOpen.value = false;
 }
 
+function mergeOption(options: RegistrationOption[], value: string, label: string): RegistrationOption[] {
+    if (!value || options.some((option) => option.value === value)) {
+        return options;
+    }
+
+    return [
+        {
+            value,
+            label: label || value,
+            description: 'Data tersimpan',
+        },
+        ...options,
+    ];
+}
+
 function ubahDiagnosa(value: string | number): void {
     form.diagnosa_awal = String(value);
     form.kd_penyakit = '';
@@ -359,14 +375,14 @@ function submit(): void {
         preserveState: true,
         only: feedbackOnly(['registeredPatients', 'filters', 'view']),
         reset: ['registeredPatients'],
-        onSuccess: (page) => {
+        onSuccess: (page: Page) => {
             if (!isFeedbackSuccess(page)) {
                 return;
             }
 
             open.value = false;
         },
-        onError: (errors) => {
+        onError: (errors: Record<string, string>) => {
             form.errors = errors;
         },
         onFinish: () => {
@@ -508,7 +524,20 @@ function submit(): void {
                             <PopoverContent class="w-[--reka-popover-trigger-width] min-w-80 p-0" align="start">
                                 <Command>
                                     <CommandList>
-                                        <CommandEmpty>{{ clinicError || 'Tidak ada spesialis yang tersedia untuk tanggal ini.' }}</CommandEmpty>
+                                        <CommandEmpty v-if="clinicOptions.length > 0 && !clinicError">
+                                            Tidak ada spesialis yang sesuai dengan pencarian.
+                                        </CommandEmpty>
+
+                                        <div v-if="clinicOptions.length === 0" class="px-3 py-5 text-center text-sm">
+                                            <Spinner v-if="clinicLoading" class="mx-auto mb-2" />
+                                            <p class="font-medium" :class="clinicError ? 'text-destructive' : 'text-foreground'">
+                                                {{ clinicLoading ? 'Memuat referensi poli' : (clinicError ? 'Referensi poli gagal dimuat' : 'Poli tidak tersedia') }}
+                                            </p>
+                                            <p class="mt-1 text-xs leading-relaxed text-muted-foreground">
+                                                {{ clinicError || 'Tidak ada spesialis yang tersedia untuk tanggal ini.' }}
+                                            </p>
+                                        </div>
+
                                         <CommandGroup>
                                             <CommandItem
                                                 v-for="clinic in clinicOptions"
@@ -555,7 +584,20 @@ function submit(): void {
                             <PopoverContent class="w-[--reka-popover-trigger-width] min-w-80 p-0" align="start">
                                 <Command>
                                     <CommandList>
-                                        <CommandEmpty>{{ doctorError || 'Tidak ada dokter BPJS yang tersedia untuk poli dan tanggal ini.' }}</CommandEmpty>
+                                        <CommandEmpty v-if="doctorOptions.length > 0 && !doctorError">
+                                            Tidak ada dokter yang sesuai dengan pencarian.
+                                        </CommandEmpty>
+
+                                        <div v-if="doctorOptions.length === 0" class="px-3 py-5 text-center text-sm">
+                                            <Spinner v-if="doctorLoading" class="mx-auto mb-2" />
+                                            <p class="font-medium" :class="doctorError ? 'text-destructive' : 'text-foreground'">
+                                                {{ doctorLoading ? 'Memuat jadwal dokter' : (doctorError ? 'Jadwal dokter gagal dimuat' : 'Jadwal dokter tidak tersedia') }}
+                                            </p>
+                                            <p class="mt-1 text-xs leading-relaxed text-muted-foreground">
+                                                {{ doctorError || 'Tidak ada dokter BPJS yang tersedia untuk poli dan tanggal ini.' }}
+                                            </p>
+                                        </div>
+
                                         <CommandGroup>
                                             <CommandItem
                                                 v-for="doctor in doctorOptions"

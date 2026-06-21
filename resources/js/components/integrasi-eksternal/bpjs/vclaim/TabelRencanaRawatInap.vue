@@ -64,14 +64,13 @@ function letterNumber(row: InpatientPlanRow | null): string {
                 <TableHead>Peserta</TableHead>
                 <TableHead>Tanggal Rencana</TableHead>
                 <TableHead>Poli & Dokter</TableHead>
-                <TableHead>No SEP</TableHead>
                 <TableHead class="min-w-56 text-center">Aksi</TableHead>
             </TableRow>
         </TableHeader>
         <TableBody>
             <template v-if="loading">
                 <TableRow v-for="index in 5" :key="index">
-                    <TableCell v-for="cell in 6" :key="cell">
+                    <TableCell v-for="cell in 5" :key="cell">
                         <Skeleton class="h-5 w-full" />
                     </TableCell>
                 </TableRow>
@@ -94,7 +93,6 @@ function letterNumber(row: InpatientPlanRow | null): string {
                         <p class="font-medium">{{ value(row, 'namaPoliTujuan', 'namaPoli', 'poliTujuan') }}</p>
                         <p class="text-xs text-muted-foreground">{{ value(row, 'namaDokter', 'dokter') }}</p>
                     </TableCell>
-                    <TableCell class="font-mono text-sm">{{ value(row, 'noSep', 'noSEP', 'noSepAsalKontrol') }}</TableCell>
                     <TableCell>
                         <TooltipProvider>
                             <div class="flex flex-wrap items-center justify-center gap-1.5">
@@ -134,7 +132,7 @@ function letterNumber(row: InpatientPlanRow | null): string {
             </template>
             <TableEmpty
                 v-else
-                :colspan="6"
+                :colspan="5"
                 :icon="emptyState.icon"
                 :severity="emptyState.severity"
                 :title="emptyState.title"
