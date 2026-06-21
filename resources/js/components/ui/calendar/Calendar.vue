@@ -6,7 +6,7 @@ import { getLocalTimeZone, today } from "@internationalized/date"
 import { createReusableTemplate, reactiveOmit, useVModel } from "@vueuse/core"
 import { CalendarRoot, useDateFormatter, useForwardPropsEmits } from "reka-ui"
 import { createYear, createYearRange, toDate } from "reka-ui/date"
-import { computed, toRaw } from "vue"
+import { computed, toRaw, watch } from "vue"
 import { cn } from "@/lib/utils"
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { CalendarCell, CalendarCellTrigger, CalendarGrid, CalendarGridBody, CalendarGridHead, CalendarGridRow, CalendarHeadCell, CalendarHeader, CalendarHeading, CalendarNextButton, CalendarPrevButton } from "."
@@ -20,10 +20,32 @@ const emits = defineEmits<CalendarRootEmits>()
 
 const delegatedProps = reactiveOmit(props, "class", "layout", "placeholder")
 
+function nilaiPlaceholderAwal(value: DateValue | DateValue[] | null | undefined): DateValue | undefined {
+  if (Array.isArray(value)) {
+    return value[0]
+  }
+
+  return value ?? undefined
+}
+
 const placeholder = useVModel(props, "placeholder", emits, {
   passive: true,
-  defaultValue: props.defaultPlaceholder ?? today(getLocalTimeZone()),
+  defaultValue: props.defaultPlaceholder ?? nilaiPlaceholderAwal(props.modelValue) ?? today(getLocalTimeZone()),
 }) as Ref<DateValue>
+
+watch(
+  () => props.modelValue,
+  (value) => {
+    const selectedValue = nilaiPlaceholderAwal(value)
+
+    if (props.placeholder || !selectedValue) {
+      return
+    }
+
+    placeholder.value = selectedValue
+  },
+  { immediate: true },
+)
 
 const formatter = useDateFormatter(props.locale ?? 'id-ID')
 
